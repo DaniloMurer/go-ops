@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -14,6 +16,7 @@ func main() {
 	newVersion := goOpsArgs[3]
 
 	buffer, err := os.ReadFile(filePath)
+	fmt.Println(path.Dir(filePath))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -32,4 +35,14 @@ func main() {
 	os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0660)
 	// todo: make the git commit with commit message containing "bumped to version {newVersion}"
 	// i think we can use the exec.Command() library here. gotta keep it simple
+	if err := exec.Command("git", "add", filePath).Run(); err != nil {
+		fmt.Print(err)
+	}
+	if err := exec.Command("git", "-C", path.Dir(filePath), "commit", "-m", "feat: bumped to version: "+newVersion).Run(); err != nil {
+		fmt.Print(err)
+	}
+	//fixme: handle git credentials
+	if err := exec.Command("git", "-C", path.Dir(filePath), "push").Run(); err != nil {
+		fmt.Print(err)
+	}
 }
